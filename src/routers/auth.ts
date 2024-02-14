@@ -1,17 +1,15 @@
 import express, { Response } from 'express';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { clientURL, forgotUserPasswordSchema, oauthLoginSchema, resetPasswordSchema, userAuthSchema } from '../constants';
-import { User } from '../models/User';
 import { expressjwt, Request as JWTRequest } from "express-jwt";
 import { sendEmail } from '../utils/sendEmail';
 import { secureRoute } from '../middleware/expressjwt';
 import { OAuth2Client } from 'google-auth-library';
+import { errorHandler } from '../utils/handleErrors';
+import { clientURL, forgotUserPasswordSchema, oauthLoginSchema, resetPasswordSchema, userAuthSchema } from '../constants';
+import { User } from '../models/User';
 const router = express.Router();
-const errorHandler = (error: any, res: Response, alternative: string) => {
-    if (error?.message) return res.status(400).send(error.message);
-    res.status(500).send(alternative)
-}
+
 const getUserByEmail = async (email: string) => {
     try {
         return await User.findOne({ email }).exec()
@@ -69,7 +67,8 @@ router.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(user.password, 10)
         const dbUser = new User({
             email: user.email,
-            password: hashedPassword
+            password: hashedPassword,
+            timerWorkouts: [],
         })
         await dbUser.save()
         const { accessToken, refreshToken } = createTokenPair(dbUser.id)
@@ -120,6 +119,7 @@ router.post("/oauth/login", async (req, res) => {
                     existingUser = new User({
                         email,
                         socialLoginProvider: provider,
+                        timerWorkouts: [],
                     })
                     await existingUser.save()
                 }

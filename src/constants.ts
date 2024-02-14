@@ -1,4 +1,4 @@
-import { object, string, ref } from 'yup';
+import { object, string, ref, number } from 'yup';
 export const clientURL = "http://localhost:3000"
 const emailSchema = string().email().max(256).required("An email is required")
 const passwordSchema = string().min(8).max(128).required("A password is required").matches(
@@ -24,4 +24,11 @@ export const resetPasswordSchema = object({
     passwordRepeat: string()
         .oneOf([ref("password"), undefined], "Password don't match")
         .required("A repeat of the password is required"),
+})
+
+export const timerWorkoutSchema = object({
+    name: string().required().max(100),
+    rest: number().required().min(1),
+    workout: number().required().min(1),
+    rounds: number().required().min(1),
 })
